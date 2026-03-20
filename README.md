@@ -1,0 +1,2 @@
+# shopbot
+Shop bot repository
