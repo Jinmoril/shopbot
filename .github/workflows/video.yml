@@ -21,17 +21,20 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install requests google-generativeai pillow moviepy pyttsx3
+        run: pip install requests google-generativeai pillow moviepy google-cloud-texttospeech
 
       - name: Create video script
         run: |
           cat > video_creator.py << 'EOF'
 import os
+import io
 import requests
 from google import genai
+from google.cloud import texttospeech
 
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 PEXELS_API_KEY = os.environ.get('PEXELS_API_KEY')
+GOOGLE_APPLICATION_CREDENTIALS = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
 TOPIC = os.environ.get('TOPIC', 'أسرار النجاح في الإنترنت')
 
 client = genai.Client(api_key=GEMINI_API_KEY)
@@ -41,6 +44,10 @@ script_prompt = f"اكتب نص فيديو قصير (150 كلمة) باللغة 
 response = client.models.generate_content(model="gemini-2.0-flash", contents=script_prompt)
 script = response.text
 print("Script:", script[:200])
+
+# Save script to file
+with open("script.txt", "w", encoding="utf-8") as f:
+    f.write(script)
 
 # 2. Get images from Pexels
 headers = {"Authorization": PEXELS_API_KEY}
@@ -57,17 +64,47 @@ for i, img in enumerate(images[:5]):
     with open(f"images/frame{i}.jpg", "wb") as f:
         f.write(r.content)
 print("✅ Images downloaded")
+
+# 3. Generate TTS audio
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = GOOGLE_APPLICATION_CREDENTIALS
+client_tts = texttospeech.TextToSpeechClient()
+
+text = script
+input_text = texttospeech.SynthesisInput(text=text)
+
+voice = texttospeech.VoiceSelectionParams(
+    language_code="ar-SA",
+    name="ar-SA-Standard-A"
+)
+
+audio_config = texttospeech.AudioConfig(
+    audio_encoding=texttospeech.AudioEncoding.MP3
+)
+
+response = client_tts.synthesize_speech(
+    input=input_text,
+    voice=voice,
+    audio_config=audio_config
+)
+
+with open("audio.mp3", "wb") as f:
+    f.write(response.audio_content)
+print("✅ Audio generated")
 EOF
 
       - name: Run video creator
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
           TOPIC: ${{ github.event.inputs.topic }}
         run: python video_creator.py
 
-      - name: Upload artifact
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: video-images
-          path: images/
+          name: video-output
+          path: |
+            images/
+            audio.mp3
+            script.txt
