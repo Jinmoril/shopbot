@@ -21,20 +21,20 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install requests google-generativeai pillow moviepy google-cloud-texttospeech
+        run: pip install requests google-generativeai pillow moviepy edge-tts
 
       - name: Create video script
         run: |
           cat > video_creator.py << 'EOF'
 import os
-import io
+import asyncio
+import aiofiles
 import requests
 from google import genai
-from google.cloud import texttospeech
+import edge_tts
 
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 PEXELS_API_KEY = os.environ.get('PEXELS_API_KEY')
-GOOGLE_APPLICATION_CREDENTIALS = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
 TOPIC = os.environ.get('TOPIC', 'أسرار النجاح في الإنترنت')
 
 client = genai.Client(api_key=GEMINI_API_KEY)
@@ -45,7 +45,7 @@ response = client.models.generate_content(model="gemini-2.0-flash", contents=scr
 script = response.text
 print("Script:", script[:200])
 
-# Save script to file
+# Save script
 with open("script.txt", "w", encoding="utf-8") as f:
     f.write(script)
 
@@ -56,47 +56,34 @@ r = requests.get("https://api.pexels.com/v1/search", headers=headers, params=par
 images = r.json().get("photos", [])
 print(f"Found {len(images)} images")
 
-# Download images
 os.makedirs("images", exist_ok=True)
 for i, img in enumerate(images[:5]):
     url = img["src"]["large"]
-    r = requests.get(url)
+    rr = requests.get(url)
     with open(f"images/frame{i}.jpg", "wb") as f:
-        f.write(r.content)
+        f.write(rr.content)
 print("✅ Images downloaded")
 
-# 3. Generate TTS audio
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = GOOGLE_APPLICATION_CREDENTIALS
-client_tts = texttospeech.TextToSpeechClient()
+# 3. Generate TTS with Edge
+async def generate_voice():
+    communicate = edge_tts.Communicate(script, "ar-SA-Modern")
+    await communicate.save("voice.mp3")
 
-text = script
-input_text = texttospeech.SynthesisInput(text=text)
+asyncio.run(generate_voice())
+print("✅ Voice generated")
 
-voice = texttospeech.VoiceSelectionParams(
-    language_code="ar-SA",
-    name="ar-SA-Standard-A"
-)
-
-audio_config = texttospeech.AudioConfig(
-    audio_encoding=texttospeech.AudioEncoding.MP3
-)
-
-response = client_tts.synthesize_speech(
-    input=input_text,
-    voice=voice,
-    audio_config=audio_config
-)
-
-with open("audio.mp3", "wb") as f:
-    f.write(response.audio_content)
-print("✅ Audio generated")
+# 4. Download free music from Pixabay
+music_url = "https://cdn.pixabay.com/audio/2022/10/05/audio_1d3e2a9b4c.mp3"
+r = requests.get(music_url)
+with open("music.mp3", "wb") as f:
+    f.write(r.content)
+print("✅ Music downloaded")
 EOF
 
       - name: Run video creator
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
           TOPIC: ${{ github.event.inputs.topic }}
         run: python video_creator.py
 
@@ -106,5 +93,6 @@ EOF
           name: video-output
           path: |
             images/
-            audio.mp3
+            voice.mp3
+            music.mp3
             script.txt
