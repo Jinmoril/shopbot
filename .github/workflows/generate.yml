@@ -1,0 +1,96 @@
+name: Video Generator
+
+on:
+  workflow_dispatch:
+    inputs:
+      topic:
+        description: 'Video Topic'
+        required: true
+        default: 'أسرار النجاح في الإنترنت'
+
+jobs:
+  create-video:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests google-generativeai pillow moviepy edge-tts
+
+      - name: Create video script
+        run: |
+          cat > video_creator.py << 'EOF'
+import os
+import asyncio
+import requests
+from google import genai
+import edge_tts
+
+GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
+PEXELS_API_KEY = os.environ.get('PEXELS_API_KEY')
+TOPIC = os.environ.get('TOPIC', 'أسرار النجاح في الإنترنت')
+
+client = genai.Client(api_key=GEMINI_API_KEY)
+
+# 1. Generate script
+script_prompt = f"اكتب نص فيديو قصير (150 كلمة) باللغة العربية عن: {TOPIC}"
+response = client.models.generate_content(model="gemini-2.0-flash", contents=script_prompt)
+script = response.text
+print("Script:", script[:200])
+
+with open("script.txt", "w", encoding="utf-8") as f:
+    f.write(script)
+
+# 2. Get images from Pexels
+headers = {"Authorization": PEXELS_API_KEY}
+params = {"query": TOPIC, "per_page": 5}
+r = requests.get("https://api.pexels.com/v1/search", headers=headers, params=params)
+images = r.json().get("photos", [])
+print(f"Found {len(images)} images")
+
+os.makedirs("images", exist_ok=True)
+for i, img in enumerate(images[:5]):
+    url = img["src"]["large"]
+    rr = requests.get(url)
+    with open(f"images/frame{i}.jpg", "wb") as f:
+        f.write(rr.content)
+print("✅ Images downloaded")
+
+# 3. Generate TTS with Edge
+async def generate_voice():
+    communicate = edge_tts.Communicate(script, "ar-SA-Modern")
+    await communicate.save("voice.mp3")
+
+asyncio.run(generate_voice())
+print("✅ Voice generated")
+
+# 4. Download free music from Pixabay
+music_url = "https://cdn.pixabay.com/audio/2022/10/05/audio_1d3e2a9b4c.mp3"
+r = requests.get(music_url)
+with open("music.mp3", "wb") as f:
+    f.write(r.content)
+print("✅ Music downloaded")
+EOF
+
+      - name: Run video creator
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+          TOPIC: ${{ github.event.inputs.topic }}
+        run: python video_creator.py
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: video-output
+          path: |
+            images/
+            voice.mp3
+            music.mp3
+            script.txt
