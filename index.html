@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ShopBot AI — متجر ذكي</title>
+<title>ShopBot AI 🛒 - متجر أمازون</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
 <style>
@@ -21,15 +21,14 @@
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: 'Cairo', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
-  header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); padding: 20px 16px 60px; text-align: center; position: relative; overflow: hidden; }
+  header { background: linear-gradient(135deg, #13ade0 0%, #16213e 50%, #0f3460 100%); padding: 20px 16px 60px; text-align: center; position: relative; overflow: hidden; }
   header::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle at 60% 40%, rgba(108,99,255,0.15) 0%, transparent 60%); animation: pulse 4s ease-in-out infinite; }
   @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.1); opacity: 1; } }
   .logo { font-size: 2.2rem; font-weight: 900; letter-spacing: -1px; position: relative; z-index: 1; }
   .logo span { color: var(--accent); }
   .tagline { color: var(--muted); font-size: 0.85rem; margin-top: 4px; position: relative; z-index: 1; }
   .search-wrap { margin: -28px 16px 0; position: relative; z-index: 10; }
-  .search-box { width: 100%; background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 14px 20px 14px 50px; color: var(--text); font-family: 'Cairo', sans-serif; font-size: 0.95rem; outline: none; transition: border-color 0.3s; direction: rtl; }
-  .search-box:focus { border-color: var(--accent); }
+  .search-box { width: 100%; background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 14px 20px 14px 50px; color: var(--text); font-family: 'Cairo', sans-serif; font-size: 0.95rem; outline: none; border-color: var(--accent); }
   .search-box::placeholder { color: var(--muted); }
   .search-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 1.2rem; pointer-events: none; }
   .section { padding: 20px 16px 0; }
@@ -40,12 +39,12 @@
   .cat-btn.active, .cat-btn:hover { background: var(--accent); border-color: var(--accent); color: white; }
   .products { padding: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .product-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 16px 12px; cursor: pointer; transition: all 0.25s; text-decoration: none; display: block; position: relative; overflow: hidden; }
-  .product-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(108,99,255,0.15); }
+  .product-card:hover { border-color: var(--accent); transform: translate(-2px); box-shadow: 0 8px 24px rgba(108,99,255,0.15); }
   .product-emoji { font-size: 2.2rem; display: block; margin-bottom: 10px; text-align: center; }
   .product-name { font-size: 0.8rem; font-weight: 600; color: var(--text); line-height: 1.3; margin-bottom: 8px; text-align: center; }
   .product-price { font-size: 1rem; font-weight: 900; color: var(--green); text-align: center; margin-bottom: 6px; }
   .product-rating { font-size: 0.7rem; color: var(--gold); text-align: center; }
-.buy-btn { display: block; width: 100%; background: linear-gradient(135deg, var(--accent), #8b5cf6); border: none; border-radius: 10px; padding: 8px; color: white; font-family: 'Cairo', sans-serif; font-weight: 700; font-size: 0.8rem; margin-top: 10px; cursor: pointer; text-align: center; text-decoration: none; }
+  .buy-btn { display: block; width: 100%; background: linear-gradient(135deg, var(--accent), #8b5cf6); border: none; border-radius: 10px; padding: 8px; color: white; font-family: 'Cairo', sans-serif; font-weight: 700; font-size: 0.8rem; margin-top: 10px; text-align: center; text-decoration: none; }
   .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border); display: flex; padding: 8px 0 20px; z-index: 100; }
   .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 0.65rem; color: var(--muted); cursor: pointer; padding: 4px; }
   .nav-item.active { color: var(--accent); }
@@ -58,65 +57,77 @@
 </head>
 <body>
 <header>
-  <div class="logo">🛍️ Shop<span>Bot</span></div>
-  <div class="tagline">أفضل منتجات Amazon.fr بسعر مميز</div>
+  <div class="logo">🛒 Shop<span>Bot</span></div>
+  <div class="tagline">متجر أمازون العالمي بأفضل الأسعار</div>
 </header>
 <div class="search-wrap">
   <span class="search-icon">🔍</span>
-  <input class="search-box" id="searchInput" type="text" placeholder="ابحث عن أي منتج...">
-</div>
+  <input class="search-box" id="searchInput" type="text" placeholder="ابحث عن منتج..."></div>
 <div class="section">
   <div class="section-title">الفئات</div>
   <div class="cats" id="cats">
     <button class="cat-btn active" data-cat="all">الكل</button>
-    <button class="cat-btn" data-cat="سماعات">🎧 سماعات</button>
-    <button class="cat-btn" data-cat="ساعات ذكية">⌚ ساعات</button>
-    <button class="cat-btn" data-cat="كمبيوتر">💻 كمبيوتر</button>
-    <button class="cat-btn" data-cat="مكبرات صوت">🔊 صوتيات</button>
-    <button class="cat-btn" data-cat="شواحن">⚡ شواحن</button>
-    <button class="cat-btn" data-cat="حقائب">💼 حقائب</button>
+    <button class="cat-btn" data-cat="سماعات">سماعات</button>
+    <button class="cat-btn" data-cat="ساعات">ساعات</button>
+    <button class="cat-btn" data-cat="phones">هواتف</button>
+    <button class="cat-btn" data-cat="أجهزة">أجهزة</button>
+    <button class="cat-btn" data-cat="ألعاب">ألعاب</button>
+    <button class="cat-btn" data-cat="ملابس">ملابس</button>
   </div>
 </div>
 <div class="section">
-  <div class="section-title" id="resultsTitle">المنتجات المميزة</div>
+  <div class="section-title" id="resultsTitle">جميع المنتجات</div>
 </div>
 <div class="products" id="products"></div>
 <div class="spacer"></div>
 <nav class="bottom-nav">
-  <div class="nav-item active"><span>🏠</span> الرئيسية</div>
-  <div class="nav-item"><span>🔥</span> عروض</div>
-  <div class="nav-item"><span>⭐</span> الأفضل</div>
-  <div class="nav-item"><span>👤</span> حسابي</div>
+  <div class="nav-item active"><span>🏠</span>الرئيسية</div>
+  <div class="nav-item"><span>🔍</span>بحث</div>
+  <div class="nav-item"><span>❤️</span>المفضلة</div>
+  <div class="nav-item"><span>👤</span>حسابي</div>
 </nav>
 <script>
 const AFFILIATE_TAG = "2556788-20";
 const PRODUCTS = [
-  { id: "B09G9BCZP3", name: "سماعات بلوتوث JBL Tune 510BT", price: "29.99€", cat: "سماعات", emoji: "🎧", rating: 4.5, isNew: true },
-  { id: "B08N5M7S6K", name: "ساعة ذكية Samsung Galaxy Watch", price: "149.99€", cat: "ساعات ذكية", emoji: "⌚", rating: 4.4, isNew: false },
-  { id: "B07PXGQC1Q", name: "لوحة مفاتيح ميكانيكية للألعاب", price: "49.99€", cat: "كمبيوتر", emoji: "⌨️", rating: 4.3, isNew: false },
-  { id: "B08L5NP6NG", name: "شاحن لاسلكي سريع 20W", price: "19.99€", cat: "شواحن", emoji: "⚡", rating: 4.2, isNew: true },
-  { id: "B09JQMJMX5", name: "كاميرا ويب HD 1080p", price: "39.99€", cat: "كمبيوتر", emoji: "📷", rating: 4.6, isNew: false },
-  { id: "B07YFCT23W", name: "مكبر صوت JBL محمول", price: "59.99€", cat: "مكبرات صوت", emoji: "🔊", rating: 4.7, isNew: false },
-  { id: "B08MVKM8YV", name: "حقيبة لابتوب 15.6 بوصة", price: "24.99€", cat: "حقائب", emoji: "💼", rating: 4.4, isNew: true },
-  { id: "B09V3KXJPQ", name: "ماوس Logitech MX Master", price: "89.99€", cat: "كمبيوتر", emoji: "🖱️", rating: 4.8, isNew: false },
+  { id: "B09NWLZVWP", name: "آيفون 15 برو ماكس", price: "5499₪", cat: "phones", emoji: "📱", rating: 4.9, isNew: true },
+  { id: "B0BSHF7WHW", name: "سامسونج جالاكسي S24", price: "3299₪", cat: "phones", emoji: "📱", rating: 4.7, isNew: true },
+  { id: "B0C33XXDKT", name: "جالكسي ووتش 6", price: "1199₪", cat: "ساعات", emoji: "⌚", rating: 4.6, isNew: false },
+  { id: "B0C4J3F2VS", name: "آبل ووتش سيريس 9", price: "1899₪", cat: "ساعات", emoji: "⌚", rating: 4.8, isNew: true },
+  { id: "B09JQM3XYT", name: "جالكسي بودز 2 برو", price: "699₪", cat: "سماعات", emoji: "🎧", rating: 4.5, isNew: false },
+  { id: "B0D59TQ8MP", name: "آيربودز برو 2", price: "899₪", cat: "سماعات", emoji: "🎧", rating: 4.9, isNew: true },
+  { id: "B0BSHF3W9Z", name: "سونيه WH-1000XM5", price: "1299₪", cat: "سماعات", emoji: "🎧", rating: 4.8, isNew: false },
+  { id: "B09NPM3V5Y", name: "جبل فيليبس 6", price: "349₪", cat: "سماعات", emoji: "🔊", rating: 4.4, isNew: false },
+  { id: "B0C2XVC3QF", name: "مايكروسوفت لابتوب 5", price: "4999₪", cat: "أجهزة", emoji: "💻", rating: 4.7, isNew: true },
+  { id: "B0BSHF3W9Z", name: "آيباد برو 13", price: "4599₪", cat: "أجهزة", emoji: "📲", rating: 4.9, isNew: false },
+  { id: "B09NPM3V5Y", name: "جالكسي تاب S9", price: "2899₪", cat: "أجهزة", emoji: "📲", rating: 4.6, isNew: true },
+  { id: "B0C4J3F2VS", name: "نينتندو سويتش OLED", price: "1499₪", cat: "ألعاب", emoji: "🎮", rating: 4.8, isNew: true },
+  { id: "B09JQM3XYT", name: "بلايستيشن 5", price: "2199₪", cat: "ألعاب", emoji: "🎮", rating: 4.9, isNew: false },
+  { id: "B0D59TQ8MP", name: "اكس بوكس سيريس X", price: "1899₪", cat: "ألعاب", emoji: "🎮", rating: 4.7, isNew: false },
+  { id: "B0BSHF7WHW", name: "تيشيرت أديداس", price: "149₪", cat: "ملابس", emoji: "👕", rating: 4.3, isNew: false },
+  { id: "B0C33XXDKT", name: "حذاء نايك", price: "399₪", cat: "ملابس", emoji: "👟", rating: 4.5, isNew: true },
+  { id: "B0C4J3F2VS", name: "ساعة كاسيو", price: "299₪", cat: "ساعات", emoji: "⌚", rating: 4.2, isNew: false },
+  { id: "B09NWLZVWP", name: "سماعات سوني", price: "799₪", cat: "سماعات", emoji: "🎧", rating: 4.6, isNew: false },
 ];
+
 let currentCat = "all", searchQuery = "";
-function makeLink(id) { return `https://www.amazon.fr/dp/${id}?tag=${AFFILIATE_TAG}`; }
+
+function makeLink(id) { return `https://www.amazon.fr/dp/${id}/tag=${AFFILIATE_TAG}`; }
 function stars(r) { return "⭐".repeat(Math.floor(r)) + (r%1>=0.5?"½":"") + ` ${r}`; }
+
 function renderProducts() {
   const grid = document.getElementById("products");
-document.getElementById("resultsTitle").textContent = "";
+  document.getElementById("resultsTitle").textContent = "";
   let filtered = PRODUCTS.filter(p => (currentCat==="all"||p.cat===currentCat) && (!searchQuery||p.name.includes(searchQuery)));
-  document.getElementById("resultsTitle").textContent = `${filtered.length} منتج متاح`;
-  if (!filtered.length) { grid.innerHTML = '<div class="empty"><span>😔</span>لا توجد نتائج</div>'; return; }
-  grid.innerHTML = filtered.map(p => 
-    `<div class="product-card" onclick="window.open('${makeLink(p.id)}','_blank')">
+  document.getElementById("resultsTitle").textContent = `${filtered.length} منتج متوفر`;
+  if (!filtered.length) { grid.innerHTML = '<div class="empty"><span>🔍</span>لم يتم العثور على منتجات</div>'; return; }
+  grid.innerHTML = filtered.map(p => `
+    <div class="product-card" onclick="window.open('${makeLink(p.id)}','_blank')">
       ${p.isNew?'<div class="badge">جديد</div>':''}
       <span class="product-emoji">${p.emoji}</span>
       <div class="product-name">${p.name}</div>
       <div class="product-price">${p.price}</div>
       <div class="product-rating">${stars(p.rating)}</div>
-      <a class="buy-btn" href="${makeLink(p.id)}" target="_blank">🛒 اشتري الآن</a>
+      <a class="buy-btn" href="${makeLink(p.id)}" target="_blank">شراء الآن</a>
     </div>`).join('');
 }
 document.getElementById("cats").addEventListener("click", e => {
